@@ -1,18 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { logout, updateUser } from "../store/authSlice";
+import { logout, updateUser, setUser } from "../store/authSlice";
 import { useHistory } from "react-router-dom";
 import { toast } from "react-toastify";
+import api from "../api/api";
 
 const UserProfilePage = () => {
     const user = useSelector((state) => state.auth.user);
     const dispatch = useDispatch();
     const history = useHistory();
 
+    // 1. Sayfa açıldığında user bilgisini API'den çek
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const res = await api.get("/auth/me");
+                dispatch(setUser(res.data)); // redux ve localStorage'a güncel user'ı at
+            } catch (err) {
+                toast.error("Kullanıcı bilgisi alınamadı");
+                console.error("User info fetch failed:", err);
+            }
+        };
+        fetchUser();
+    }, [dispatch]);
+
+    // 2. Redux güncellenince formu güncelle
     const [formData, setFormData] = useState({
-        name: user?.name || "",
-        email: user?.email || "",
+        fullName: "",
+        email: "",
+        phoneNumber: "",
     });
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                fullName: user.fullName || "",
+                email: user.email || "",
+                phoneNumber: user.phoneNumber || "",
+            });
+        }
+    }, [user]);
+
+    // ... Pet ile ilgili kodlar ve diğer fonksiyonlar değişmedi ...
 
     const [petData, setPetData] = useState({
         name: "",
@@ -34,25 +63,35 @@ const UserProfilePage = () => {
         setPetData({ ...petData, [e.target.name]: e.target.value });
     };
 
-    const handleUserUpdate = (e) => {
+    const handleUserUpdate = async (e) => {
         e.preventDefault();
-        
         try {
+            await api.put("/auth/update", formData);
             dispatch(updateUser(formData));
             toast.success('Profil bilgileriniz güncellendi!');
         } catch (error) {
             toast.error('Güncelleme sırasında bir hata oluştu');
         }
     };
-    const handlePetSubmit = (e) => {
-        e.preventDefault();
-        const mockPetData = {
-            ...petData,
-            id: Date.now().toString(),
-            userId: user.id,
-        };
-        console.log("Gönderilen mock veri:", mockPetData);
-        toast.success('Evcil hayvan bilgileri kaydedildi');
+
+const handlePetSubmit = async (e) => {
+    e.preventDefault();
+
+    const dto = {
+        name: petData.name,
+        species: petData.species,
+        breed: petData.breed,
+        gender: petData.gender,
+        imageUrl: petData.image || "https://loremipsum.io/placeholder/500x500?text=Pet+Image",
+        age: Number(petData.age),
+        description: petData.description,
+        ownerId: user.id
+    };
+
+    try {
+        const res = await api.post("/pet", dto);
+        toast.success('Evcil hayvan başarıyla kaydedildi!');
+
         setPetData({
             name: "",
             species: "",
@@ -63,13 +102,23 @@ const UserProfilePage = () => {
             image: ""
         });
         setShowPetForm(false);
-    };
+
+    } catch (err) {
+        toast.error("Evcil hayvan kaydedilemedi!");
+        console.error("Pet ekleme hatası:", err);
+    }
+};
 
     const handleLogout = () => {
         dispatch(logout());
         toast.info('Çıkış yapılıyor...');
         history.push("/");
     };
+
+    // User verisi gelmeden yükleme gösterebilirsin (opsiyonel)
+    if (!user) {
+        return <div className="text-center p-10">Yükleniyor...</div>;
+    }
 
     return (
         <div className="w-full max-w-7xl mx-auto p-4">
@@ -79,14 +128,15 @@ const UserProfilePage = () => {
                     <div className="flex flex-col items-center mb-4">
                         <div className="relative mb-2">
                             <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-600">
-                                {user?.name?.charAt(0).toUpperCase()}
+                                {user?.fullName?.charAt(0).toUpperCase()}
                             </div>
                             <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                                {user?.points || 0}
+                                {user?.totalPatiPoints || 0}
                             </div>
                         </div>
-                        <h2 className="font-bold">{user?.name}</h2>
+                        <h2 className="font-bold">{user?.fullName}</h2>
                         <p className="text-sm text-gray-500">{user?.email}</p>
+                        <p className="text-sm text-gray-500">{user?.phoneNumber}</p>
                     </div>
 
                     <div className="space-y-2">
@@ -130,11 +180,11 @@ const UserProfilePage = () => {
                         <h2 className="text-xl font-bold mb-4">Profil Bilgileri</h2>
                         <form onSubmit={handleUserUpdate} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium mb-1">İsim</label>
+                                <label className="block text-sm font-medium mb-1">İsim Soyisim</label>
                                 <input
                                     type="text"
-                                    name="name"
-                                    value={formData.name}
+                                    name="fullName"
+                                    value={formData.fullName}
                                     onChange={handleUserChange}
                                     className="w-full border rounded p-2"
                                     required
@@ -146,6 +196,17 @@ const UserProfilePage = () => {
                                     type="email"
                                     name="email"
                                     value={formData.email}
+                                    onChange={handleUserChange}
+                                    className="w-full border rounded p-2"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Telefon Numarası</label>
+                                <input
+                                    type="tel"
+                                    name="phoneNumber"
+                                    value={formData.phoneNumber}
                                     onChange={handleUserChange}
                                     className="w-full border rounded p-2"
                                     required
@@ -207,6 +268,7 @@ const UserProfilePage = () => {
                                     value={petData.age}
                                     onChange={handlePetChange}
                                     className="border rounded p-2"
+                                    min={0}
                                 />
                                 <input
                                     type="text"

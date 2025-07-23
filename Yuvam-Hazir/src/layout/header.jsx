@@ -32,9 +32,9 @@ const Header = ({ onSearch }) => {
         {/* Logo */}
         <Link to="/" className="flex items-center">
           <img
-            src="https://placehold.co/50x50?text=Logo"
+            src="/logo.jpeg"
             alt="Logo"
-            className="h-10 w-auto"
+            className="h-20 w-auto object-cover rounded-full "
           />
         </Link>
         {/* Masaüstü Navigasyon */}

@@ -129,7 +129,7 @@ const PetDetail = () => {
                         
                         <div>
                             <p className="text-sm text-gray-500">İletişim</p>
-                            <div className="flex items-center space-x-2 mt-1">
+                            <div className="flex justify-center items-center space-x-2 mt-1">
                                 <FaPhone className="text-green-500" />
                                 <a 
                                     href={`tel:${pet.owner?.phoneNumber}`} 
@@ -143,7 +143,7 @@ const PetDetail = () => {
 
                     <button className="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2">
                         <FaPhone />
-                        <span>Sahibi Ara</span>
+                        <span>Mesaj Gönder</span>
                     </button>
                 </div>
 
