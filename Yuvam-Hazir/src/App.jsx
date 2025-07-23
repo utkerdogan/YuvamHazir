@@ -15,6 +15,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './components/ProtectedRoute';
 import PetList from './pages/PetList';
 import PetDetail from './pages/PetDetail';
+import FavoritesPage from './pages/FavoritesPage';
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,6 +33,7 @@ function App() {
           <ProtectedRoute path="/Profile" component={UserProfilePage} />
           <Route path="/Pets" component={PetList} />
           <Route path="/Pet/:id" component={PetDetail} />
+          <Route path="/favorites" component={FavoritesPage} />
         </Switch>
         <ToastContainer
           position="top-right"

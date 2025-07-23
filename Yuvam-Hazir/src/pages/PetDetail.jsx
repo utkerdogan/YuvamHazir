@@ -3,12 +3,15 @@ import { useParams } from "react-router-dom";
 import api from "../api/api";
 import { FaPaw, FaVenusMars, FaBirthdayCake, FaPhone, FaUser } from "react-icons/fa";
 import { GiDogBowl, GiCat } from "react-icons/gi";
+import { ArrowLeft } from "lucide-react";
+import { useHistory } from "react-router-dom";
 
 const PetDetail = () => {
     const { id } = useParams();
     const [pet, setPet] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const history = useHistory();
 
     useEffect(() => {
         api.get(`/Pet/${id}`)
@@ -50,6 +53,13 @@ const PetDetail = () => {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 p-6">
             {/* Sol: Pet Bilgisi */}
             <div className="md:col-span-2 space-y-6">
+                <button 
+                    onClick={() => history.goBack()} 
+                    className="flex items-center text-blue-500 hover:text-blue-700 mb-6 transition-colors"
+                >
+                    <ArrowLeft className="mr-2" />
+                    Geri Dön
+                </button>
                 <div className="relative">
                     <img
                         src={pet.imageUrl || "https://via.placeholder.com/800x500?text=Pet+Image"}

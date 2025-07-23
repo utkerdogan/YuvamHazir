@@ -6,8 +6,10 @@ import {
     updateQuantityAsync,
 } from "../store/cartSlice";
 import ConfirmModal from "./ConfirmModal";
+import { useHistory } from "react-router-dom";
 
 const CartItem = ({ item, userId }) => {
+    const history = useHistory();
     const dispatch = useDispatch();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -37,7 +39,7 @@ const CartItem = ({ item, userId }) => {
         </div>
 
         <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-900 truncate">{item.productName}</h3>
+            <a onClick={() => history.push(`/product/${item.id}`)}><h3 className="font-medium text-gray-900 truncate">{item.productName}</h3></a>
             <p className="text-sm text-gray-500 mt-1">
             {parseFloat(item.unitPrice).toFixed(2)}₺
             </p>

@@ -1,51 +1,88 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../api/api";
 import { StarIcon, ShoppingBagIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { HeartIcon } from "@heroicons/react/24/solid";
+import { HeartIcon as SolidHeart } from "@heroicons/react/24/solid";
+import { HeartIcon as OutlineHeart } from "@heroicons/react/24/outline";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCartItems } from "../store/cartSlice";
+import { toast } from "react-toastify";
 
 const fetchProduct = async (id) => {
   const res = await api.get(`/product/${id}`);
   return res.data;
 };
 
-const ProductDetails = () => {
+const fetchFavorites = async (userId) => {
+  if (!userId) return [];
+  const { data } = await api.get(`/favorites?userId=${userId}`);
+  return data;
+};
 
-  const { id } = useParams(); 
+const ProductDetails = () => {
+  const { id } = useParams();
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  const queryClient = useQueryClient();
+
+  // Ürün ve favoriler sorguları
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: ["product", id],
+    queryFn: () => fetchProduct(id),
+    enabled: !!id,
+  });
+
+  const { data: favorites = [], refetch: refetchFavorites } = useQuery({
+    queryKey: ["favorites", user?.id],
+    queryFn: () => fetchFavorites(user?.id),
+    enabled: !!user?.id,
+  });
+
+  // Favoride mi?
+  const isFavorite = favorites.includes(Number(id));
+
+  // Favori ekle/çıkar işlemleri
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      toast.info("Favorilere eklemek için giriş yapmalısınız.");
+      return;
+    }
+    try {
+      if (isFavorite) {
+        await api.delete(`/favorites/${id}?userId=${user.id}`);
+        toast.info("Favorilerden çıkarıldı.");
+      } else {
+        await api.post(`/favorites/${id}?userId=${user.id}`);
+        toast.success("Favorilere eklendi!");
+      }
+      // Favoriler listesini güncelle
+      queryClient.invalidateQueries(["favorites", user.id]);
+    } catch (err) {
+      toast.error("Favori işlemi başarısız.");
+    }
+  };
 
   const handleAdd = () => {
     dispatch(setCartItems(product));
   };
 
-  const { data: product, isLoading, error } = useQuery({
-    queryKey: ["product", id],
-    queryFn: () => fetchProduct(id),
-  });
-
   const renderRatingStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
-
     for (let i = 0; i < fullStars; i++) {
       stars.push(<StarIcon key={`full-${i}`} className="w-5 h-5 text-yellow-400 fill-yellow-400" />);
     }
-
     if (hasHalfStar) {
       stars.push(<StarIcon key="half" className="w-5 h-5 text-yellow-400 fill-yellow-400" />);
     }
-
     const emptyStars = 5 - stars.length;
     for (let i = 0; i < emptyStars; i++) {
       stars.push(<StarIcon key={`empty-${i}`} className="w-5 h-5 text-gray-300" />);
     }
-
     return stars;
   };
 
@@ -67,7 +104,7 @@ const ProductDetails = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !product) {
     return (
       <div className="max-w-4xl mx-auto p-4 mt-6">
         <div className="bg-white shadow-md rounded-xl p-6 flex flex-col md:flex-row gap-6">
@@ -103,11 +140,19 @@ const ProductDetails = () => {
             <div className="relative group">
               <img
                 src={product.imageUrl}
-                alt={product.Name}
+                alt={product.name}
                 className="h-auto max-h-[500px] object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
               />
-              <button className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors">
-                <HeartIcon className="w-6 h-6 text-gray-400 hover:text-red-500" />
+              <button 
+                className={`absolute top-4 right-4 p-2 bg-white rounded-full shadow-md transition-colors`}
+                onClick={handleToggleFavorite}
+                title={isFavorite ? "Favoriden Çıkar" : "Favorilere Ekle"}
+              >
+                {isFavorite ? 
+                  <SolidHeart className="w-6 h-6 text-red-500" /> 
+                  : 
+                  <OutlineHeart className="w-6 h-6 text-gray-400 hover:text-red-500" />
+                }
               </button>
             </div>
             
@@ -116,7 +161,7 @@ const ProductDetails = () => {
                 <div className="w-16 h-16 border rounded-md overflow-hidden cursor-pointer hover:border-blue-500">
                   <img 
                     src={product.imageUrl} 
-                    alt={`${product.Name}`} 
+                    alt={`${product.name}`} 
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -131,7 +176,7 @@ const ProductDetails = () => {
               </span>
             </div>
             
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.Name}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
             
             <div className="flex items-center mb-4">
               <div className="flex mr-2">
@@ -190,7 +235,7 @@ const ProductDetails = () => {
         <div className="py-8">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Ürün Açıklaması</h3>
           <p className="text-gray-600">
-            {product.LongDescription || product.Description || "Bu ürünle ilgili detaylı açıklama bulunmamaktadır."}
+            {product.Description || "Bu ürünle ilgili detaylı açıklama bulunmamaktadır."}
           </p>
           
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">

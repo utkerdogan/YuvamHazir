@@ -28,11 +28,12 @@ const handleAdd = () => {
 
 
   return (
-    <div className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition duration-300">
+    <div className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition duration-300 cursor-pointer">
       <img
         src={product.imageUrl}
         alt={product.name}
         className="w-full h-48 object-cover"
+        onClick={() => history.push(`/product/${product.id}`)}
       />
       <div className="p-4">
         <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
@@ -52,13 +53,6 @@ const handleAdd = () => {
               Sepete Ekle
             </button>
           )}
-
-          <button 
-            className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm" 
-            onClick={() => history.push(`/product/${product.id}`)}
-          >
-            İncele
-          </button>
         </div>
       </div>
     </div>
