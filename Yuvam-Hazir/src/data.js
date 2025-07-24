@@ -5,7 +5,7 @@ export const teamMembers = [
     id: 1,
     name: "Hilal Çakmak",
     title: "Backend Developer",
-    description: "Geliştirdiğimiz projede backend ve API entegrasyonundan sorumlu. .NET ve Entity Framework'te uzman.",
+    description: "Geliştirdiğimiz projede backend entegrasyonundan sorumlu. Ayrıca, veritabanı tasarımı ve yönetimi konularında da aktif rol aldı.",
     image: "/images/Hilal_Cakmak.jpeg",
     linkedin: 'https://www.linkedin.com/in/hilal-cakmak-aaabb9225/',
     github: 'https://github.com/hilalcakmak'
@@ -23,7 +23,7 @@ export const teamMembers = [
     id: 3,
     name: "Harun Can Akkurt",
     title: "Backend Developer",
-    description: "Hem frontend hem backend tarafında aktif olarak görev aldı. API ve veri modellemesiyle ilgilendi.",
+    description: "Backend tarafında aktif olarak görev aldı. API, Controller ve DTO geliştirmeleri yaptı.",
     image: "/images/Harun_Can_Akkurt.jpeg",
     linkedin: 'https://www.linkedin.com/in/harun-can-akkurt-b243702a2/',
     github: 'https://github.com/lushakaa'
